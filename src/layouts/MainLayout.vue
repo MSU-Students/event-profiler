@@ -16,6 +16,33 @@
         </q-toolbar-title>
 
         <div>Quasar v{{ $q.version }}</div>
+        <q-btn round>
+          <q-avatar>
+          <img src="https://cdn.quasar.dev/img/avatar.png">
+        </q-avatar>
+        <q-popup-proxy>
+          <q-list>
+            <q-item clickable to="/auth/login">
+              <q-item-section avatar>
+                <q-icon name="login" />
+              </q-item-section>
+              <q-item-section>
+                Login
+
+              </q-item-section>
+            </q-item>
+            <q-item clickable to="/auth/logout">
+              <q-item-section avatar>
+                <q-icon name="logout" />
+              </q-item-section>
+              <q-item-section>
+                Logout
+
+              </q-item-section>
+            </q-item>
+          </q-list>
+        </q-popup-proxy>
+        </q-btn>
       </q-toolbar>
     </q-header>
 

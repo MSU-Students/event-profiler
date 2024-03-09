@@ -1,29 +1,31 @@
 <template>
   <q-page class="row items-center justify-evenly">
-    <Roulette
-      display-shadow
-      :counter-clockwise="false"
-      :duration="10"
-      class="wheel"
-      ref="wheel"
-      easing="bounce"
-      :items="people"
-      :size="500"
-      :result-variation="100"
-      @click="launchWheel"
-      @wheel-end="wheelEnded"
-    ></Roulette>
-
     <q-banner v-if="selected">
       <template #avatar v-if="selected.avatar">
         <q-avatar><q-img :src="selected.avatar"/></q-avatar>
       </template>
       {{ selected.name }}
       <template #action>
-        <q-btn>Skip</q-btn>
-        <q-btn>Next</q-btn>
+        <q-btn @click="reset">Next</q-btn>
       </template>
     </q-banner>
+    <Roulette
+      v-else
+      display-shadow
+      display-indicator
+      :counter-clockwise="false"
+      :duration="10"
+      class="wheel"
+      ref="wheel"
+      easing="bounce"
+      :items="people"
+      :size="(Math.min($q.screen.width, $q.screen.height) - 100)"
+      :result-variation="duration"
+      @click="launchWheel"
+      @wheel-end="wheelEnded"
+    ></Roulette>
+
+
 
     <q-dialog v-model="showDialog">
       <q-card class="bg-primary fixed-center">
@@ -49,7 +51,6 @@ import { computed } from '@vue/reactivity';
 class Person {
   htmlContent: string;
   constructor(public name: string, public id:string, avatar: string) {
-    this.id = name;
     this.htmlContent = `<div class="flex col center" style="gap: 25px;">${name}<br/><img class="avatar" src="${avatar}" alt="" /></div>`;
   }
 }
@@ -65,6 +66,7 @@ const showDialog = ref(false);
 const profiles = ref<Profile[]>([]);
 const selected = ref<Profile>();
 const eventName = ref('');
+const duration = ref(100);
 const people = computed(() => {
   return profiles.value.map(p => new Person(p.name, p.id, p.avatar));
 })
@@ -78,11 +80,21 @@ onMounted(() => {
 })
 function launchWheel() {
   spinning.value = true;
-  wheel.value?.launchWheel()
+  //duration.value = Math.round(Math.random() * 50) + 50;
+  wheel.value?.launchWheel();
 }
 function wheelEnded(item: Person) {
   spinning.value = false;
   selected.value = profiles.value.find(p => p.id == item.id);
+}
+function reset() {
+  const index = profiles.value.findIndex(p => p.id == selected.value?.id);
+  if (index >= 0) {
+    selected.value = undefined;
+    profiles.value.splice(index, 1);
+    // duration.value = 0;
+    // wheel.value?.reset();
+  }
 }
 </script>;
 

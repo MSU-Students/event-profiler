@@ -12,10 +12,9 @@
         />
 
         <q-toolbar-title>
-          Quasar App
+          Event Wheeler
         </q-toolbar-title>
 
-        <div>Quasar v{{ $q.version }}</div>
         <q-btn round>
           <q-avatar @click="checkUser()">
             <img src="https://cdn.quasar.dev/img/avatar.png" v-if="!presentUser">
@@ -48,6 +47,7 @@
     </q-header>
 
     <q-drawer
+      v-if="false"
       v-model="leftDrawerOpen"
       show-if-above
       bordered

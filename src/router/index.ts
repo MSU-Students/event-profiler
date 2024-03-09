@@ -7,6 +7,7 @@ import {
 } from 'vue-router';
 
 import routes from './routes';
+import { useProfileStore } from 'src/stores/profile';
 
 /*
  * If not building with SSR mode, you can
@@ -31,6 +32,15 @@ export default route(function (/* { store, ssrContext } */) {
     // quasar.conf.js -> build -> publicPath
     history: createHistory(process.env.VUE_ROUTER_BASE),
   });
-
+  const profileStore = useProfileStore();
+  Router.beforeEach(async (to, from, next) => {
+    await profileStore.auth();
+    const user = profileStore.getUser();
+    if (user || to.name == 'login') {
+      next();
+    } else {
+      next({name: 'login'});
+    }
+  })
   return Router;
 });

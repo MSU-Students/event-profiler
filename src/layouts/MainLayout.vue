@@ -17,9 +17,10 @@
 
         <div>Quasar v{{ $q.version }}</div>
         <q-btn round>
-          <q-avatar>
-          <img src="https://cdn.quasar.dev/img/avatar.png">
-        </q-avatar>
+          <q-avatar @click="checkUser()">
+            <img src="https://cdn.quasar.dev/img/avatar.png" v-if="!presentUser">
+            <img :src="presentUser.photoURL || 'https://cdn.quasar.dev/img/avatar.png'" v-else>
+          </q-avatar>
         <q-popup-proxy>
           <q-list>
             <q-item clickable to="/auth/login">
@@ -73,9 +74,13 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue';
+import { computed, ref } from 'vue';
 import EssentialLink, { EssentialLinkProps } from 'components/EssentialLink.vue';
-
+import { useProfileStore } from 'src/stores/profile';
+const profileStore = useProfileStore();
+const presentUser = computed(() => {
+  return profileStore.getUser();
+});
 const essentialLinks: EssentialLinkProps[] = [
   {
     title: 'Docs',
@@ -125,5 +130,9 @@ const leftDrawerOpen = ref(false)
 
 function toggleLeftDrawer() {
   leftDrawerOpen.value = !leftDrawerOpen.value
+}
+
+function checkUser() {
+  return profileStore.auth();
 }
 </script>

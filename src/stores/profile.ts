@@ -47,6 +47,9 @@ export const useProfileStore = defineStore('profile', {
     },
     streamWith() {
       return myFirebaseService.streamWith();
+    },
+    getAllEvents() {
+      return myFirebaseService.streamWith();
     }
   }
 });

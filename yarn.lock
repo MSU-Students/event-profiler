@@ -4830,6 +4830,11 @@ vue-router@^4.0.12:
   dependencies:
     "@vue/devtools-api" "^6.5.1"
 
+vue3-roulette@^0.3.3:
+  version "0.3.3"
+  resolved "https://registry.yarnpkg.com/vue3-roulette/-/vue3-roulette-0.3.3.tgz#7e238ef05dc5103ef9b52ca54780b15b897afe83"
+  integrity sha512-DYbxyZDSH26dK2+OD2l3zHfxHz4aAzP9Uiz+aNtmWTngLNJaU9fLzvbsQUTKpenKJ6nPCiRZDJH5fkE2dSwpUA==
+
 vue@^3.4.18:
   version "3.4.21"
   resolved "https://registry.yarnpkg.com/vue/-/vue-3.4.21.tgz#69ec30e267d358ee3a0ce16612ba89e00aaeb731"

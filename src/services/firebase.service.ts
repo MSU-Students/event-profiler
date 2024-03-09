@@ -1,9 +1,9 @@
 // Import the functions you need from the SDKs you need
 import { initializeApp } from "firebase/app";
 import { getAuth, signInWithPopup, GoogleAuthProvider, signOut, AuthCredential, User, UserCredential, createUserWithEmailAndPassword, fetchSignInMethodsForEmail, sendEmailVerification, sendPasswordResetEmail, signInAnonymously, signInWithCredential, signInWithEmailAndPassword } from "firebase/auth";
-import { doc, getFirestore, onSnapshot, query, setDoc } from "firebase/firestore";
+import { doc, getDocs, getFirestore, onSnapshot, query, setDoc, where } from "firebase/firestore";
 import { collection, addDoc } from "firebase/firestore";
-import { Profile } from 'src/stores/profile';
+import { Event, Profile } from 'src/stores/profile';
 import { Observable, Subject, retry } from 'rxjs';
 
 // Your web app's Firebase configuration
@@ -119,24 +119,21 @@ class MyFirebaseService {
     return fetchSignInMethodsForEmail(auth, email);
   }
   async createRecord(profile: Profile) {
-    return await setDoc(doc(db, "profiles", profile.id), profile);
+    return await setDoc(doc(db, "profiles",(profile.event || '') + ':' +profile.id), profile);
   }
-  private getQueryFromFilter(
-    filter: { [field: string]: string }) {
-    const collectionRef = collection(db, 'profiles');
-    const queryRef = query(collectionRef);
-    return { queryRef, collectionRef };
+  async announceWinner(profile: Profile) {
+    return await setDoc(doc(db, "winners",(profile.event || '') + ':' +profile.id), profile);
   }
 
-  streamWith(
-    ) {
-    const { queryRef, collectionRef } = this.getQueryFromFilter({});
+  streamWith(eventKey: string) {
+    const collectionRef = collection(db, 'profiles');
+    const queryRef = query(collectionRef, where('event', '==', eventKey));
     return new Observable<Profile[]>((subscriber) => {
       onSnapshot(queryRef || collectionRef, {
         complete: () => subscriber.complete(),
         next: (snapshot) => {
           const records = snapshot.docs.map((doc) => {
-            return { ...doc.data(), id: doc.id } as unknown as T;
+            return { ...doc.data() } as unknown as Profile;
           });
           if (snapshot.metadata.fromCache) {
             subscriber.next();
@@ -151,6 +148,67 @@ class MyFirebaseService {
         delay: 1000 * 5,
       })
     );
+  }
+  streamWinners(eventKey: string) {
+    const collectionRef = collection(db, 'winners');
+    const queryRef = query(collectionRef, where('event', '==', eventKey));
+    return new Observable<Profile[]>((subscriber) => {
+      onSnapshot(queryRef || collectionRef, {
+        complete: () => subscriber.complete(),
+        next: (snapshot) => {
+          const records = snapshot.docs.map((doc) => {
+            return { ...doc.data() } as unknown as Profile;
+          });
+          if (snapshot.metadata.fromCache) {
+            subscriber.next();
+            return;
+          }
+          subscriber.next(records);
+        },
+        error: (err) => subscriber.error(err),
+      });
+    }).pipe(
+      retry({
+        delay: 1000 * 5,
+      })
+    );
+  }
+  streamEventUpdates(id: string) {
+    const collectionRef = collection(db, 'events');
+    const queryRef = query(collectionRef, where('id', '==', id));
+    return new Observable<Event[]>((subscriber) => {
+      onSnapshot(queryRef || collectionRef, {
+        complete: () => subscriber.complete(),
+        next: (snapshot) => {
+          const records = snapshot.docs.map((doc) => {
+            return { ...doc.data(), id: doc.id } as unknown as Event;
+          });
+          if (snapshot.metadata.fromCache) {
+            subscriber.next();
+            return;
+          }
+          subscriber.next(records);
+        },
+        error: (err) => subscriber.error(err),
+      });
+    }).pipe(
+      retry({
+        delay: 1000 * 5,
+      })
+    );
+  }
+
+  async saveEvent(e: Event) {
+    return await setDoc(doc(db, "events", e.id), e);
+  }
+  async getEvents(date: string) {
+    const queryRef = query( collection(db, 'events'), where('date', '==', date))
+    const docsRef = await getDocs(queryRef);
+    if (docsRef.empty) {
+      return !docsRef.metadata.fromCache ? [] : undefined;
+    } else {
+      return docsRef.docs.map((d) => d.data() as Event);
+    }
   }
 }
 

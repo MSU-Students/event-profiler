@@ -1,43 +1,62 @@
 import { defineStore } from 'pinia';
+import { date } from 'quasar';
 import { myFirebaseService } from 'src/services/firebase.service';
 
 export interface Profile {
   name: string;
   id: string;
+  event?: string;
   avatar: string;
+}
+
+export interface Event {
+  name: string;
+  id: string;
+  date: string;
+  spinning?: boolean;
+  owner: Profile;
 }
 
 export const useProfileStore = defineStore('profile', {
   state: () => ({
-    records: [{
-      name: 'Lupin',
-      id: 'III',
-      avatar: 'https://upload.wikimedia.org/wikipedia/en/0/0f/ArseneLupinIII.jpg'
-    }] as Profile[]
+    events: [] as Event[]
   }),
-
   getters: {
-    headCount (state) {
-      return state.records.length;
-    }
   },
-
   actions: {
     async login() {
-      const response = await myFirebaseService.signInWithGoogleAccount();
-      if (response) {
-        return myFirebaseService.createRecord({
-          avatar: response.user.photoURL || '',
-          id: response.user.uid,
-          name: response.user.displayName || 'Me'
-        })
-      }
+      await myFirebaseService.signInWithGoogleAccount();
+      await this.getAllEvents();
     },
     logout() {
       return myFirebaseService.signOut();
     },
-    register ( profile: Profile ) {
-      this.records.push(profile);
+    async register ( event: Event ) {
+      event.date = date.formatDate(new Date(), 'YYYY-MM-DD');
+      await myFirebaseService.saveEvent(event);
+      return this.getAllEvents();
+    },
+    announceWinner(profile: Profile) {
+      return myFirebaseService.announceWinner(profile);
+    },
+    watchWinners(eventKey: string) {
+      return myFirebaseService.streamWinners(eventKey);
+    },
+    joinEvent(eventKey: string) {
+      const user = this.getUser();
+      if (!user) return;
+      return myFirebaseService.createRecord({
+        avatar: user.photoURL || '',
+        id: user.uid,
+        name: user.displayName || 'Me',
+        event: eventKey
+      })
+    },
+    watchEvent(event:string) {
+      return myFirebaseService.streamEventUpdates(event);
+    },
+    updateEvent(e: Event) {
+      return myFirebaseService.saveEvent(e);
     },
     getUser() {
       return myFirebaseService.getUser();
@@ -45,11 +64,14 @@ export const useProfileStore = defineStore('profile', {
     auth() {
       return myFirebaseService.validateAuth();
     },
-    streamWith() {
-      return myFirebaseService.streamWith();
+    streamWith(eventKey:string) {
+      return myFirebaseService.streamWith(eventKey);
     },
-    getAllEvents() {
-      return myFirebaseService.streamWith();
+    async getAllEvents() {
+      const events = await myFirebaseService.getEvents(date.formatDate(new Date(), 'YYYY-MM-DD'));
+      if (events) {
+        this.events = events;
+      }
     }
   }
 });

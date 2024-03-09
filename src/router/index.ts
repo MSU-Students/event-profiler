@@ -39,7 +39,7 @@ export default route(function (/* { store, ssrContext } */) {
     if (user || to.name == 'login') {
       next();
     } else {
-      next({name: 'login'});
+      next({name: 'login', query: { redirect: to.fullPath }});
     }
   })
   return Router;

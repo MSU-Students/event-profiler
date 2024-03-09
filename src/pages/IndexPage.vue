@@ -1,53 +1,108 @@
 <template>
   <q-page class="row items-center justify-evenly">
-    <q-banner v-if="selected">
-      <template #avatar v-if="selected.avatar">
-        <q-avatar><q-img :src="selected.avatar"/></q-avatar>
-      </template>
-      {{ selected.name }}
-      <template #action>
-        <q-btn @click="reset">Next</q-btn>
-      </template>
-    </q-banner>
-    <Roulette
-      v-else
-      display-shadow
-      display-indicator
-      :counter-clockwise="false"
-      :duration="10"
-      class="wheel"
-      ref="wheel"
-      easing="bounce"
-      :items="people"
-      :size="(Math.min($q.screen.width, $q.screen.height) - 100)"
-      :result-variation="duration"
-      @click="launchWheel"
-      @wheel-end="wheelEnded"
-    ></Roulette>
-
-
-
+    <div v-if="selected" >
+      <q-banner class="text-h6">
+        <template #avatar v-if="selected.avatar">
+          <q-avatar><q-img :src="selected.avatar"/></q-avatar>
+        </template>
+        Congratulations {{ selected.name }}!
+        <template #action>
+          <q-btn @click="reset">Next</q-btn>
+        </template>
+      </q-banner>
+      <qrcode-vue :value="$route.fullPath" :size="(Math.min($q.screen.width, $q.screen.height) - 200)" level="H" />
+      <div class="text-h6 text-center">Scan to Join</div>
+    </div>
+    <div v-else-if="presentEvent && presentEvent.owner.id == profileStore.getUser()?.uid">
+      <q-banner class="text-h6 text-center">Welcome to {{ presentEvent.name }}</q-banner>
+      <Roulette v-if="people.length >= 4"
+        display-shadow
+        display-indicator
+        :counter-clockwise="false"
+        :duration="10"
+        class="wheel"
+        ref="wheel"
+        easing="bounce"
+        :items="people"
+        :size="(Math.min($q.screen.width, $q.screen.height) - 150)"
+        :result-variation="duration"
+        @click="launchWheel"
+        @wheel-end="wheelEnded"
+      ></Roulette>
+      <div v-else>
+        <q-banner class="text-center">
+          <div>Requires at least 4 participants
+          Scan to join</div></q-banner>
+        <qrcode-vue :value="$route.fullPath" :size="(Math.min($q.screen.width, $q.screen.height) - 200)" level="H" />
+      </div>
+    </div>
+    <div v-else-if="presentEvent" class="text-center">
+      <q-banner class="text-h6">Welcome to {{ presentEvent.name }}</q-banner>
+      <q-spinner-orbit
+        v-if="presentEvent.spinning"
+          color="primary"
+          size="8em"
+        />
+      <q-list bordered v-else>
+        <div class="text-h6">Winners</div>
+        <q-item v-for="w in winners" :key="w.id">
+          <q-item-section avatar>
+            <q-avatar>
+              <q-img :src="w.avatar" />
+            </q-avatar>
+          </q-item-section>
+          <q-item-section>{{ w.name }}</q-item-section>
+        </q-item>
+      </q-list>
+    </div>
+    <div v-else>
+      <q-list bordered>
+        <q-item clickable :to="'/'+e.id" v-for="e in profileStore.events" :key="e.id">
+          <q-item-section avatar>
+            <q-avatar>
+              <q-img :src="e.owner.avatar" />
+            </q-avatar>
+          </q-item-section>
+          <q-item-section>{{ e.name }}</q-item-section>
+        </q-item>
+        <q-item class="text-center text-bold" v-if="profileStore.events.length == 0">
+          No event today!
+        </q-item>
+        <q-item clickable @click="createNewEvent">
+          <q-item-section avatar>
+            <q-icon name="today" />
+          </q-item-section>
+          <q-item-section>Host New Event</q-item-section>
+        </q-item>
+      </q-list>
+    </div>
     <q-dialog v-model="showDialog">
       <q-card class="bg-primary fixed-center">
+        <q-form @submit="saveEvent">
         <q-card-section class="text-h6">
-          New Event
+          Host Event Wheeler
         </q-card-section>
         <q-card-section>
-          <q-input v-model="eventName" />
+          <q-input label="Event Name" v-model="eventName" :rules="[(v) =>  v && v.length > 3 || 'Invalid Event']" />
         </q-card-section>
         <q-card-actions>
-          <q-btn icon="save" v-close-popup>Start Event</q-btn>
+          <q-btn icon="save" type="submit">Start Event</q-btn>
         </q-card-actions>
+      </q-form>
       </q-card>
     </q-dialog>
   </q-page>
 </template>
 
 <script setup lang="ts">
+
 import { Roulette } from "vue3-roulette";
-import { Profile, useProfileStore } from 'src/stores/profile';
+import QrcodeVue from 'qrcode.vue'
+import { Event, Profile, useProfileStore } from 'src/stores/profile';
 import { onMounted, ref } from 'vue';
 import { computed } from '@vue/reactivity';
+import { uid } from 'quasar';
+import { useRoute, useRouter } from 'vue-router';
 class Person {
   htmlContent: string;
   constructor(public name: string, public id:string, avatar: string) {
@@ -64,36 +119,99 @@ const spinning = ref(false);
 const profileStore = useProfileStore();
 const showDialog = ref(false);
 const profiles = ref<Profile[]>([]);
+const winners = ref<Profile[]>([]);
 const selected = ref<Profile>();
+const presentEvent = ref<Event>();
 const eventName = ref('');
 const duration = ref(100);
 const people = computed(() => {
   return profiles.value.map(p => new Person(p.name, p.id, p.avatar));
 })
-
-onMounted(() => {
-  profileStore.streamWith().subscribe({
-    next(value) {
-        profiles.value = value;
-    },
-  })
+const $route = useRoute();
+const $router = useRouter();
+function load() {
+  const eventId = $route.params.event || '';
+  const e = profileStore.events.find(e => e.id == eventId);
+  if (e && presentEvent.value?.id !== e.id) {
+    presentEvent.value = e;
+    const user = profileStore.getUser();
+    if (user && user.uid == presentEvent.value.owner.id) {
+      profileStore.streamWith(presentEvent.value.id).subscribe({
+        next(value) {
+            profiles.value = value;
+        },
+      })
+    }
+    if (user && presentEvent.value.owner.id !== user.uid) {
+      profileStore.joinEvent(presentEvent.value.id);
+      profileStore.watchEvent(presentEvent.value.id).subscribe({
+        next(value) {
+          if (value[0].id == presentEvent.value?.id) {
+            presentEvent.value = value[0];
+          }
+        },
+      });
+      profileStore.watchWinners(presentEvent.value.id).subscribe({
+        next(value) {
+          winners.value = value;
+        },
+      });
+    }
+  }
+}
+$router.afterEach(load)
+onMounted(async () => {
+  await profileStore.getAllEvents();
+  load();
 })
+
 function launchWheel() {
   spinning.value = true;
   //duration.value = Math.round(Math.random() * 50) + 50;
   wheel.value?.launchWheel();
+  if (presentEvent.value) {
+    presentEvent.value.spinning = true;
+    profileStore.updateEvent(presentEvent.value);
+  }
 }
-function wheelEnded(item: Person) {
+async function wheelEnded(item: Person) {
   spinning.value = false;
   selected.value = profiles.value.find(p => p.id == item.id);
+  if (presentEvent.value) {
+    presentEvent.value.spinning = false;
+    await profileStore.updateEvent(presentEvent.value);
+    if (selected.value) {
+      await profileStore.announceWinner(selected.value);
+    }
+  }
 }
 function reset() {
   const index = profiles.value.findIndex(p => p.id == selected.value?.id);
   if (index >= 0) {
     selected.value = undefined;
     profiles.value.splice(index, 1);
-    // duration.value = 0;
-    // wheel.value?.reset();
+    //save winner
+  }
+}
+function createNewEvent() {
+  eventName.value = '';
+  showDialog.value = true;
+
+}
+async function saveEvent() {
+  const user = profileStore.getUser();
+  if (user) {
+    await profileStore.register({
+      date: '',
+      id: uid(),
+      name: eventName.value,
+      owner: {
+        id: user.uid,
+        avatar: user.photoURL || '',
+        name: user.displayName || ''
+      }
+    });
+    showDialog.value = false;
   }
 }
 </script>;

@@ -6,9 +6,9 @@
           flat
           dense
           round
-          icon="menu"
-          aria-label="Menu"
-          @click="toggleLeftDrawer"
+          icon="home"
+          aria-label="Home"
+          to="/"
         />
 
         <q-toolbar-title>

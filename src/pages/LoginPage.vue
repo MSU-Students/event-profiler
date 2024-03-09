@@ -1,15 +1,16 @@
 <script lang="ts" setup>
 import { useProfileStore } from 'src/stores/profile';
 import { ref } from 'vue';
-import { useRouter } from 'vue-router';
+import { useRoute, useRouter } from 'vue-router';
 
 const username= ref('');
 const password= ref('');
 const profileStore = useProfileStore();
 const $router = useRouter();
+const $route = useRoute();
 async function login() {
   await  profileStore.login();
-  await $router.replace('/');
+  await $router.replace(($route.query?.redirect as string) ||  '/');
 }
 </script>
 <template>

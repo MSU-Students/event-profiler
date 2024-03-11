@@ -1,6 +1,6 @@
 // Import the functions you need from the SDKs you need
 import { initializeApp } from "firebase/app";
-import { getAuth, signInWithPopup, GoogleAuthProvider, signOut, AuthCredential, User, UserCredential, createUserWithEmailAndPassword, fetchSignInMethodsForEmail, sendEmailVerification, sendPasswordResetEmail, signInAnonymously, signInWithCredential, signInWithEmailAndPassword } from "firebase/auth";
+import { getAuth, signInWithPopup, GoogleAuthProvider, signOut, AuthCredential, User, UserCredential, createUserWithEmailAndPassword, sendEmailVerification, sendPasswordResetEmail, signInAnonymously, signInWithCredential, signInWithEmailAndPassword } from "firebase/auth";
 import { doc, getDocs, getFirestore, onSnapshot, query, setDoc, where } from "firebase/firestore";
 import { collection, addDoc } from "firebase/firestore";
 import { Event, Profile } from 'src/stores/profile';
@@ -114,9 +114,6 @@ class MyFirebaseService {
   }
   async forgetPassword(email: string) {
     return sendPasswordResetEmail(auth, email);
-  }
-  async fetchSignInMethodsForEmail(email: string) {
-    return fetchSignInMethodsForEmail(auth, email);
   }
   async createRecord(profile: Profile) {
     return await setDoc(doc(db, "profiles",(profile.event || '') + ':' +profile.id), profile);

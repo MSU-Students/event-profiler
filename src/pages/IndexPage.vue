@@ -31,8 +31,9 @@
       ></Roulette>
       <div v-else>
         <q-banner class="text-center">
-          <div class="text-bold">Requires at least 4 participants
-          Scan to join</div></q-banner>
+          <div class="text-bold">Requires at least 4 participants</div>
+          <div class="text-h6">Scan to join</div>
+        </q-banner>
         <qrcode-vue :value="qrCodeUrl" :size="(Math.min($q.screen.width, $q.screen.height) - 200)" level="H" />
       </div>
     </div>

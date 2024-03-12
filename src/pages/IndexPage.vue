@@ -30,8 +30,8 @@
         @wheel-end="wheelEnded"
       ></Roulette>
       <div v-else>
-        <q-banner class="text-center text-bold">
-          <div>Requires at least 4 participants
+        <q-banner class="text-center">
+          <div class="text-bold">Requires at least 4 participants
           Scan to join</div></q-banner>
         <qrcode-vue :value="qrCodeUrl" :size="(Math.min($q.screen.width, $q.screen.height) - 200)" level="H" />
       </div>

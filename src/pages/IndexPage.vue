@@ -33,7 +33,7 @@
         <q-banner class="text-center">
           <div>Requires at least 4 participants
           Scan to join</div></q-banner>
-        <qrcode-vue :value="$route.fullPath" :size="(Math.min($q.screen.width, $q.screen.height) - 200)" level="H" />
+        <qrcode-vue :value="qrCodeUrl" :size="(Math.min($q.screen.width, $q.screen.height) - 200)" level="H" />
       </div>
     </div>
     <div v-else-if="presentEvent" class="text-center">
@@ -129,6 +129,9 @@ const people = computed(() => {
 })
 const $route = useRoute();
 const $router = useRouter();
+const qrCodeUrl = computed(() => {
+  return location.href;
+})
 function load() {
   const eventId = $route.params.event || '';
   const e = profileStore.events.find(e => e.id == eventId);

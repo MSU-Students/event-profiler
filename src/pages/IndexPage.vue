@@ -155,12 +155,13 @@ function load() {
           }
         },
       });
-      profileStore.watchWinners(presentEvent.value.id).subscribe({
-        next(value) {
-          winners.value = value;
-        },
-      });
     }
+    profileStore.watchWinners(presentEvent.value.id).subscribe({
+      next(winnerProfiles) {
+        winners.value = winnerProfiles;
+        profiles.value = profiles.value.filter(p => !(winnerProfiles.find(w => w.id == p.id)));
+      },
+    });
   }
 }
 $router.afterEach(load)

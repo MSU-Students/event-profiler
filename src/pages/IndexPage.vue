@@ -35,6 +35,11 @@
         <q-banner class="text-center">
           <div class="text-bold">Requires at least 4 participants</div>
           <div class="text-h6">Scan to join</div>
+          <div class="text-center">
+            <q-avatar v-for="p in profiles" :key="p.id">
+              <q-img :src="p.avatar"/>
+            </q-avatar>
+          </div>
         </q-banner>
         <qrcode-vue :value="qrCodeUrl" :size="(Math.min($q.screen.width, $q.screen.height) - 200)" level="H" />
       </div>
@@ -100,7 +105,8 @@
 
 <script setup lang="ts">
 
-import { Roulette } from "vue3-roulette";
+// import { Roulette } from "vue3-roulette";
+const Roulette = require("vue3-roulette");
 import QrcodeVue from 'qrcode.vue'
 import { Event, Profile, useProfileStore } from 'src/stores/profile';
 import { onMounted, ref } from 'vue';
@@ -159,12 +165,13 @@ function load() {
           }
         },
       });
-      profileStore.watchWinners(presentEvent.value.id).subscribe({
-        next(value) {
-          winners.value = value;
-        },
-      });
     }
+    profileStore.watchWinners(presentEvent.value.id).subscribe({
+      next(winnerProfiles) {
+        winners.value = winnerProfiles;
+        profiles.value = profiles.value.filter(p => !(winnerProfiles.find(w => w.id == p.id)));
+      },
+    });
   }
 }
 $router.afterEach(load)

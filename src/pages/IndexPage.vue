@@ -105,8 +105,7 @@
 
 <script setup lang="ts">
 
-// import { Roulette } from "vue3-roulette";
-const Roulette = require("vue3-roulette");
+import { Roulette } from "vue3-roulette";
 import QrcodeVue from 'qrcode.vue'
 import { Event, Profile, useProfileStore } from 'src/stores/profile';
 import { onMounted, ref } from 'vue';

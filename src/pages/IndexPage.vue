@@ -7,7 +7,7 @@
         </template>
         Congratulations {{ selected.name }}!
         <template #action>
-          <q-btn @click="reset">Next</q-btn>
+          <q-btn @click="nextRound">Next</q-btn>
         </template>
       </q-banner>
       <qrcode-vue :value="qrCodeUrl" :size="(Math.min($q.screen.width, $q.screen.height) - 200)" level="H" />
@@ -199,13 +199,8 @@ async function wheelEnded(item: Person) {
     }
   }
 }
-function reset() {
-  const index = profiles.value.findIndex(p => p.id == selected.value?.id);
-  if (index >= 0) {
-    selected.value = undefined;
-    profiles.value.splice(index, 1);
-    //save winner
-  }
+function nextRound() {
+
 }
 function createNewEvent() {
   eventName.value = '';

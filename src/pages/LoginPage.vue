@@ -19,7 +19,7 @@ async function login() {
       Welcome to Event Wheeler
     </q-card-section>
     <q-card-actions>
-      <q-btn icon="login" @click="login">Login with Google</q-btn>
+      <q-btn icon="login" @click="login">Login with your Google Account</q-btn>
       <q-btn icon="home" to="/" ></q-btn>
     </q-card-actions>
   </q-card>

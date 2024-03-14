@@ -72,6 +72,16 @@ export const useProfileStore = defineStore('profile', {
       if (events) {
         this.events = events;
       }
+    },
+    async clone(clone:Event, profiles: Profile[]) {
+      for (let i = 0; i < profiles.length; i++) {
+        const profile = profiles[i];
+        await myFirebaseService.createRecord({
+          ...profile,
+          event: clone.id
+        })
+      }
+
     }
   }
 });

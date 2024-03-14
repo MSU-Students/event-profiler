@@ -10,11 +10,13 @@
           <q-btn @click="reset">Next</q-btn>
         </template>
       </q-banner>
-      <qrcode-vue :value="$route.fullPath" :size="(Math.min($q.screen.width, $q.screen.height) - 200)" level="H" />
+      <qrcode-vue :value="qrCodeUrl" :size="(Math.min($q.screen.width, $q.screen.height) - 200)" level="H" />
       <div class="text-h6 text-center">Scan to Join</div>
     </div>
+    <! -- if present user is the host of event -- >
     <div v-else-if="presentEvent && presentEvent.owner.id == profileStore.getUser()?.uid">
       <q-banner class="text-h6 text-center">Welcome to {{ presentEvent.name }}</q-banner>
+      <q-btn icon="content_copy" class="full-width" @click="clone(presentEvent)">Clone Event</q-btn>
       <Roulette v-if="people.length >= 4"
         display-shadow
         display-indicator
@@ -87,6 +89,7 @@
         <q-form @submit="saveEvent">
         <q-card-section class="text-h6">
           Host Event Wheeler
+            <span v-if="sourceEvent">from{{ sourceEvent.name }}</span>
         </q-card-section>
         <q-card-section>
           <q-input label="Event Name" v-model="eventName" :rules="[(v) =>  v && v.length > 3 || 'Invalid Event']" />
@@ -129,6 +132,7 @@ const profiles = ref<Profile[]>([]);
 const winners = ref<Profile[]>([]);
 const selected = ref<Profile>();
 const presentEvent = ref<Event>();
+const sourceEvent = ref<Event>();
 const eventName = ref('');
 const duration = ref(100);
 const people = computed(() => {
@@ -147,8 +151,8 @@ function load() {
     const user = profileStore.getUser();
     if (user && user.uid == presentEvent.value.owner.id) {
       profileStore.streamWith(presentEvent.value.id).subscribe({
-        next(value) {
-            profiles.value = value;
+        next(joinedMember) {
+            profiles.value = joinedMember;
         },
       })
     }
@@ -211,8 +215,9 @@ function createNewEvent() {
 }
 async function saveEvent() {
   const user = profileStore.getUser();
+  showDialog.value = false;
   if (user) {
-    await profileStore.register({
+      const newEvent = {
       date: '',
       id: uid(),
       name: eventName.value,
@@ -221,9 +226,18 @@ async function saveEvent() {
         avatar: user.photoURL || '',
         name: user.displayName || ''
       }
-    });
-    showDialog.value = false;
+    };
+    await profileStore.register(newEvent);
+    if (sourceEvent.value) {
+      sourceEvent.value = undefined;
+      await profileStore.clone(newEvent, profiles.value);
+    }
   }
+
+}
+function clone(source: Event) {
+  showDialog.value = true;
+  sourceEvent.value = source;
 }
 </script>;
 

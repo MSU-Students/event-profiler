@@ -33,7 +33,7 @@
         <q-banner class="text-center">
           <div class="text-bold">Requires at least 4 participants</div>
           <div class="text-h6">Scan to join</div>
-          <div class = "text=center">
+          <div class="text-center">
             <q-avatar v-for="p in profiles" :key="p.id">
               <q-img :src="p.avatar"/>
             </q-avatar>
@@ -102,7 +102,8 @@
 
 <script setup lang="ts">
 
-import { Roulette } from "vue3-roulette";
+// import { Roulette } from "vue3-roulette";
+const Roulette = require("vue3-roulette");
 import QrcodeVue from 'qrcode.vue'
 import { Event, Profile, useProfileStore } from 'src/stores/profile';
 import { onMounted, ref } from 'vue';

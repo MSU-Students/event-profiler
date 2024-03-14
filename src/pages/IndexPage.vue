@@ -200,7 +200,7 @@ async function wheelEnded(item: Person) {
   }
 }
 function nextRound() {
-
+  selected.value = undefined;
 }
 function createNewEvent() {
   eventName.value = '';
@@ -224,7 +224,7 @@ async function saveEvent() {
     await profileStore.register(newEvent);
     if (sourceEvent.value) {
       sourceEvent.value = undefined;
-      await profileStore.clone(newEvent, profiles.value);
+      await profileStore.clone(newEvent, [...profiles.value,...winners.value]);
     }
   }
 
